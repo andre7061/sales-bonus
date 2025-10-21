@@ -6,9 +6,9 @@
  */ //919.07;
 function calculateSimpleRevenue(purchase, _product) {
   const { discount, sale_price, quantity = 0 } = purchase;
-  if (discount == 0) {
+  if (purchase.discount === 0) {
     return (
-      sale_price * quantity -
+      sale_price * (1 - discountgit) * quantity -
       _product.purchase_price * quantity
     );
   } else {
