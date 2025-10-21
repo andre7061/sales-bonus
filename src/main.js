@@ -5,10 +5,10 @@
  * @returns {number}
  */ //919.07;
 function calculateSimpleRevenue(purchase, _product) {
-  const { discount, sale_price, quantity } = purchase;
+  const { discount, sale_price, quantity = 0 } = purchase;
   if (discount == 0) {
     return (
-      sale_price * (1 - discount) * quantity -
+      sale_price * quantity -
       _product.purchase_price * quantity
     );
   } else {
