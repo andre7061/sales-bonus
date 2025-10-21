@@ -6,17 +6,11 @@
  */ //919.07;
 function calculateSimpleRevenue(purchase, _product) {
   const { discount, sale_price, quantity = 0 } = purchase;
-  if (purchase.discount === 0) {
-    return (
-      sale_price * (1 - discountgit) * quantity -
-      _product.purchase_price * quantity
-    );
-  } else {
-    return (
-      sale_price * (1 - discount / 100) * quantity -
-      _product.purchase_price * quantity
-    );
-  }
+
+  return (
+    sale_price * (1 - discount / 100) * quantity -
+    _product.purchase_price * quantity
+  );
 }
 //  card.sale_price * (1 - card.discount / 100) * card.quantity -
 //    product.purchase_price * card.quantity;
