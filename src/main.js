@@ -5,12 +5,12 @@
  * @returns {number}
  */ //919.07;
 
- function calculateSimpleRevenue(purchase, _product) {
-   const { discount, sale_price, quantity = 0 } = purchase;
+function calculateSimpleRevenue(purchase, _product) {
+  const { discount, sale_price, quantity = 0 } = purchase;
 
-   // Игнорируем _product, так как нам нужна только выручка
-   return sale_price * (1 - discount / 100) * quantity;
- }
+  // Игнорируем _product, так как нам нужна только выручка
+  return sale_price * (1 - discount / 100) * quantity;
+}
 function calculateSimpleProfit(purchase, _product) {
   const { discount, sale_price, quantity = 0 } = purchase;
 
@@ -62,7 +62,7 @@ function analyzeSalesData(data, options) {
     throw new Error('calculateBonus должна быть функцией');
   }
 
-  // @TODO: Проверка обязательных полей в data
+  // Проверка обязательных полей в data
   if (
     !data.sellers ||
     !Array.isArray(data.sellers) ||
@@ -75,20 +75,23 @@ function analyzeSalesData(data, options) {
     throw new Error('Некорректные данные products');
   }
 
-  if (!data.purchase_records || !Array.isArray(data.purchase_records)) {
+  if (
+    !data.purchase_records ||
+    !Array.isArray(data.purchase_records) ||
+    data.purchase_records.length === 0
+  ) {
     throw new Error('Некорректные данные purchase_records');
   }
-  // @TODO: Подготовка промежуточных данных для сбора статистики
 
+  // Подготовка промежуточных данных для сбора статистики
   const sellerStats = data.sellers.map((seller) => ({
     seller_id: seller.id,
     name: `${seller.first_name} ${seller.last_name}`,
     revenue: 0,
     profit: 0,
-    sales_count: +(0).toFixed(2),
+    sales_count: 0,
     top_products: [],
     bonus: 0,
-    // Заполним начальными данными
   }));
 
   const sellerIndex = data.sellers.reduce(
@@ -108,61 +111,58 @@ function analyzeSalesData(data, options) {
     {}
   );
 
+  // Собираем статистику по продажам
   data.purchase_records.forEach((record) => {
-    // Чек
-    const seller = sellerIndex[record.seller_id]; // Продавец
-    const arrTopProduct = [];
+    const seller = sellerIndex[record.seller_id];
+
     sellerStats.forEach((el) => {
       if (seller.id === el.seller_id) {
         el.sales_count += 1;
         el.revenue += record.total_amount;
+
         record.items.forEach((card) => {
           const product = productIndex[card.sku];
           el.profit += calculateSimpleProfit(card, product);
-          const key = card.sku;
-          const meaning = card.quantity;
-
-          arrTopProduct.push({ [key]: meaning });
-
-          el.top_products.push({ [key]: meaning });
         });
       }
     });
   });
 
+  // Округляем денежные значения
   sellerStats.forEach((el) => {
     el.profit = Number(el.profit.toFixed(2));
     el.revenue = Number(el.revenue.toFixed(2));
   });
 
-  //сортировка
-  const sortSellerStats = sellerStats.sort((a, b) => b.profit - a.profit);
+  // Собираем топ товары для каждого продавца
+  sellerStats.forEach((seller) => {
+    const productStats = {};
 
-  sortSellerStats.forEach((seller, index) => {
-    seller.bonus = calculateBonus(index, sortSellerStats.length, seller);
-    seller.top_products = seller.top_products.reduce((acc, el) => {
-      const key = Object.keys(el)[0];
-      const value = Object.values(el)[0];
-
-      const existing = acc.find((item) => Object.keys(item)[0] === key);
-
-      if (existing) {
-        const existingKey = Object.keys(existing)[0];
-        existing[existingKey] += value;
-      } else {
-        acc.push({ ...el });
+    // Собираем статистику по товарам из всех чеков продавца
+    data.purchase_records.forEach((record) => {
+      if (record.seller_id === seller.seller_id) {
+        record.items.forEach((item) => {
+          if (!productStats[item.sku]) {
+            productStats[item.sku] = 0;
+          }
+          productStats[item.sku] += item.quantity;
+        });
       }
+    });
 
-      return acc;
-    }, []);
-
-    seller.top_products = seller.top_products.slice(0, 10);
-    seller.top_products.sort(
-      (a, b) => Object.values(b)[0] - Object.values(a)[0]
-    );
+    // Преобразуем в массив и сортируем
+    seller.top_products = Object.entries(productStats)
+      .map(([sku, quantity]) => ({ sku, quantity }))
+      .sort((a, b) => b.quantity - a.quantity)
+      .slice(0, 10);
   });
 
-  //   return card
+  // Сортируем продавцов по прибыли
+  const sortSellerStats = sellerStats.sort((a, b) => b.profit - a.profit);
+
+  // Назначаем бонусы
+  sortSellerStats.forEach((seller, index) => {
+    seller.bonus = calculateBonus(index, sortSellerStats.length, seller);
+  });
   return sortSellerStats;
-  // })
 }
