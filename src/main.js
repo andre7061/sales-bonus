@@ -6,6 +6,12 @@
  */ //919.07;
 function calculateSimpleRevenue(purchase, _product) {
   const { discount, sale_price, quantity } = purchase;
+  if (discount === 0) {
+    return (
+      sale_price * (1 - discount) * quantity -
+      _product.purchase_price * quantity
+    );
+  }
   return (
     sale_price * (1 - discount / 100) * quantity -
     _product.purchase_price * quantity
@@ -114,7 +120,7 @@ function analyzeSalesData(data, options) {
   });
 
   //сортировка
-  const sortSellerStats = sellerStats.toSorted((a, b) => b.profit - a.profit);
+  const sortSellerStats = sellerStats.sort((a, b) => b.profit - a.profit);
 
   sortSellerStats.forEach((seller, index) => {
     seller.bonus = calculateBonus(index, sortSellerStats.length, seller);
@@ -139,7 +145,6 @@ function analyzeSalesData(data, options) {
       (a, b) => Object.values(b)[0] - Object.values(a)[0]
     );
   });
-
 
   //   return card
   return sortSellerStats;
