@@ -12,8 +12,7 @@ function calculateSimpleRevenue(purchase, _product) {
     _product.purchase_price * quantity
   );
 }
-//  card.sale_price * (1 - card.discount / 100) * card.quantity -
-//    product.purchase_price * card.quantity;
+
 /**
  * Функция для расчета бонусов
  * @param index порядковый номер в отсортированном массиве
