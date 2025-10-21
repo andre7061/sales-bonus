@@ -64,7 +64,7 @@ function analyzeSalesData(data, options) {
     revenue: 0,
     profit: 0,
     sales_count: +(0).toFixed(2),
-    products_sold: {},
+    top_products: [],
     bonus: 0,
     // Заполним начальными данными
   }));
@@ -76,7 +76,6 @@ function analyzeSalesData(data, options) {
     }),
     {}
   );
-  console.log(sellerIndex);
 
   // Создаем индекс товаров
   const productIndex = data.products.reduce(
@@ -90,7 +89,7 @@ function analyzeSalesData(data, options) {
   data.purchase_records.forEach((record) => {
     // Чек
     const seller = sellerIndex[record.seller_id]; // Продавец
-    
+    const arrTopProduct = [];
     sellerStats.forEach((el) => {
       if (seller.id === el.seller_id) {
         el.sales_count += 1;
@@ -98,7 +97,12 @@ function analyzeSalesData(data, options) {
         record.items.forEach((card) => {
           const product = productIndex[card.sku];
           el.profit += calculateSimpleRevenue(card, product);
-          console.log(card);
+          const key = card.sku;
+          const meaning = card.quantity;
+
+          arrTopProduct.push({ [key]: meaning });
+
+          el.top_products.push({ [key]: meaning });
         });
       }
     });
@@ -114,9 +118,28 @@ function analyzeSalesData(data, options) {
 
   sortSellerStats.forEach((seller, index) => {
     seller.bonus = calculateBonus(index, sortSellerStats.length, seller);
-    seller.top_products;
-    console.log(seller)
+    seller.top_products = seller.top_products.reduce((acc, el) => {
+      const key = Object.keys(el)[0];
+      const value = Object.values(el)[0];
+
+      const existing = acc.find((item) => Object.keys(item)[0] === key);
+
+      if (existing) {
+        const existingKey = Object.keys(existing)[0];
+        existing[existingKey] += value;
+      } else {
+        acc.push({ ...el });
+      }
+
+      return acc;
+    }, []);
+
+    seller.top_products = seller.top_products.slice(0, 10);
+    seller.top_products.sort(
+      (a, b) => Object.values(b)[0] - Object.values(a)[0]
+    );
   });
+
 
   //   return card
   return sortSellerStats;
