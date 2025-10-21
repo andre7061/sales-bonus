@@ -4,7 +4,14 @@
  * @param _product карточка товара
  * @returns {number}
  */ //919.07;
-function calculateSimpleRevenue(purchase, _product) {
+
+ function calculateSimpleRevenue(purchase, _product) {
+   const { discount, sale_price, quantity = 0 } = purchase;
+
+   // Игнорируем _product, так как нам нужна только выручка
+   return sale_price * (1 - discount / 100) * quantity;
+ }
+function calculateSimpleProfit(purchase, _product) {
   const { discount, sale_price, quantity = 0 } = purchase;
 
   return (
@@ -96,7 +103,7 @@ function analyzeSalesData(data, options) {
         el.revenue += record.total_amount;
         record.items.forEach((card) => {
           const product = productIndex[card.sku];
-          el.profit += calculateSimpleRevenue(card, product);
+          el.profit += calculateSimpleProfit(card, product);
           const key = card.sku;
           const meaning = card.quantity;
 
